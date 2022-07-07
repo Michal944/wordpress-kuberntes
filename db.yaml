@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wp-db
+  namespace: wp
+spec:
+  type: ClusterIP
+  selector:
+    app: wp-db
+  ports:
+    - port: 3306
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wp-db
+  namespace: wp
+  labels:
+    app: wp-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wp-db
+  template:
+    metadata:
+      labels:
+        app: wp-db
+    spec:
+      containers:
+      - name: con-wp-db
+        image: mysql:5.6
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+        volumeMounts:
+        - name: mysql-pvc-deploy
+          mountPath: "/var/lib/mysql"
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_DATABASE
+          value: wordpress       
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: wpdb
+              key: USER_NAME
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: wpdb
+              key: PASSWORD
+        - name: MYSQL_RANDOM_ROOT_PASSWORD
+          value: '1'
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "300m"
+          limits:
+            memory: "756Mi"
+            cpu: "600m"
+      volumes:
+      - name: mysql-pvc-deploy
+        persistentVolumeClaim:
+          claimName: mysql-pvc

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv
+  namespace: wp
+spec:
+  capacity:
+   storage: 20Gi
+  storageClassName: manual
+  accessModes:
+   - ReadWriteOnce
+  mountOptions:
+  - hard
+  - nfsvers=4.1
+  nfs:
+    path: /nas/wordpress/db
+    server: 192.168.1.85
+    readOnly: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: wp
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  volumeName: mysql-pv
